@@ -1,4 +1,4 @@
-
+import { StaticImageData } from "next/image";
 export interface CartItem {
   id: string;
   name: string;
@@ -8,7 +8,7 @@ export interface CartItem {
   originalPrice?: number;
   quantity: number;
   stock: "In Stock" | "Low Stock" | "Out of Stock";
-  image: string
+  image: string | StaticImageData;
 }
 export interface OrderSummary {
   subtotal: number;

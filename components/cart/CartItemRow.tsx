@@ -11,9 +11,9 @@ function CartItemRow({
   onIncrement,
 }: {
   item: CartItem;
-  onRemove: (id: number) => void;
-  onDecrement: (id: number) => void;
-  onIncrement: (id: number) => void;
+  onRemove: (id: string) => void;
+  onDecrement: (id: string) => void;
+  onIncrement: (id: string) => void;
 }) {
   return (
     <div className="flex items-start gap-3 py-5 border-b border-border-subtle last:border-b-0">

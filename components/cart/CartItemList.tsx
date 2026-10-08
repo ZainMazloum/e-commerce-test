@@ -2,9 +2,9 @@ import CartItemRow from "./CartItemRow";
 import { CartItem } from "@/types/domain/cart";
 interface CartItemListProps {
   items: CartItem[];
-  onRemove: (id: number) => void;
-  onDecrement: (id: number) => void;
-  onIncrement: (id: number) => void;
+  onRemove: (id: string) => void;
+  onDecrement: (id: string) => void;
+  onIncrement: (id: string) => void;
 }
 export default function CartItemList({
   items,
