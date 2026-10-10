@@ -13,8 +13,16 @@ interface PlaceOrderButtonProps {
 
 export default function PlaceOrderButton({ cartItems, totalAmount }: PlaceOrderButtonProps) {
 const [state, formAction, isPending] = useActionState<ActionResult | null, FormData>(
-  async () => {
-    return await createOrderAction({ items: cartItems, totalAmount });
+ async () => {
+    const items = cartItems.map((item) => ({
+      id: item.id,
+      name: item.name,
+      description: item.description,
+      image: typeof item.image === "string" ? item.image : item.image.src,
+      price: item.price,
+      quantity: item.quantity,
+    }));
+    return await createOrderAction({ items, totalAmount });
   },
   null
 );

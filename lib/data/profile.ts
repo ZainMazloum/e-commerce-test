@@ -15,6 +15,7 @@ export const ORDERS: Order[] = [
       {
         id: "item-1",
         name: "Woolen Canvas Tote & more text",
+        description: "Woolen canvas tote bag",
         details: "View Details ▾",
         image: "/placeholder.jpg",
         price: 120.0,
@@ -31,6 +32,7 @@ export const ORDERS: Order[] = [
       {
         id: "item-2",
         name: "Chronograph Signature Series",
+        description: "Chronograph Signature Series watch",
         details: "View Details ▾",
         image: "/placeholder.jpg",
         price: 195.0,

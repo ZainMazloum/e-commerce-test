@@ -1,5 +1,5 @@
-import { StockStatus } from "@/types/stock/stockstatus";
-export const stockConfigConstrant: Record<
+import { StockStatus } from "@/types/domain/stock";
+export const stockConfigConstant: Record<
   StockStatus,
   { label: string; className: string }
 > = {

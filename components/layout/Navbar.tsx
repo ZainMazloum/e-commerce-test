@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Search, ShoppingCart, User } from "lucide-react";
-
+import { useCartStore, selectItemCount } from "@/store/cartStore"; // NEW
+import {useHydrated} from "@/hooks/useHydrated";
 interface NavLink {
   label: string;
   href: string;
@@ -24,6 +25,8 @@ const iconButtons = [
 
 export default function Navbar() {
   const pathname = usePathname();
+  const hydrated = useHydrated(); // NEW: check if the component is hydrated
+  const itemCount = useCartStore(selectItemCount); // NEW
 
   return (
     <header className="hidden md:block bg-background border-b border-border">
@@ -55,7 +58,6 @@ export default function Navbar() {
                   >
                     {link.label}
 
-                    {/* Active underline using your primary theme color */}
                     {isActive && (
                       <span className="absolute left-0 -bottom-1 w-full h-0.5 bg-primary rounded-full" />
                     )}
@@ -71,14 +73,26 @@ export default function Navbar() {
               <Link
                 key={label}
                 href={href}
-                aria-label={label}
-                className="w-11 h-11 rounded-2xl bg-surface-secondary flex items-center justify-center transition-all duration-300 hover:bg-primary hover:-translate-y-1 hover:scale-105 hover:shadow-card-hover active:scale-95 group"
+                aria-label={
+                  label === "Cart" && itemCount > 0
+                    ? `Cart, ${itemCount} items`   // NEW
+                    : label
+                }
+                className="relative w-11 h-11 rounded-2xl bg-surface-secondary flex items-center justify-center transition-all duration-300 hover:bg-primary hover:-translate-y-1 hover:scale-105 hover:shadow-card-hover active:scale-95 group"
               >
+                {/*                ^^^^^^^ NEW: "relative" so the badge positions against this link */}
                 <Icon
                   size={20}
                   strokeWidth={1.6}
                   className="text-text-secondary group-hover:text-surface-primary transition-colors duration-300"
                 />
+
+                {/* NEW: cart badge */}
+                {label === "Cart" && hydrated && itemCount > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-secondary text-white text-[11px] font-semibold flex items-center justify-center">
+                    {itemCount}
+                  </span>
+                )}
               </Link>
             ))}
           </div>

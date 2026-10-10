@@ -1,8 +1,12 @@
+import { ReactNode } from "react";
+
 export interface OrderItemType {
+  [x: string]: ReactNode;
   id: string;
   name: string;
   image: string;
   description: string;
+  details?: string;
   price: number;
   quantity: number;
 }

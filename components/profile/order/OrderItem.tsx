@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { OrderItemType } from "@/types/domain/profile";
+import { OrderItemType } from "@/types/domain/order";
 
 interface OrderItemProps {
   item: OrderItemType;
