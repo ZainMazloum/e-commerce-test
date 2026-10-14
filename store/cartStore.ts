@@ -38,22 +38,35 @@ export const useCartStore = create<CartState>()(
             i.id === id ? { ...i, quantity: i.quantity + 1 } : i
           ),
         })),
-
-      decrement: (id) =>
-        set((state) => ({
-          items: state.items.map((i) =>
-            i.id === id && i.quantity > 1 ? { ...i, quantity: i.quantity - 1 } : i
-          ),
-        })),
+decrement: (id) =>
+  set((state) => ({
+    items: state.items
+      .map((i) => i.id === id ? { ...i, quantity: i.quantity - 1 } : i)
+      .filter((i) => i.quantity > 0),
+  })),
 
       clear: () => set({ items: [] }),
     }),
-    {
-      name: "lumina-cart",
-      version: 1,
-      storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({ items: state.items }),
-    }
+   {
+  name: "lumina-cart",
+  version: 1,
+  storage: createJSONStorage(() => localStorage),
+  partialize: (state) => ({ items: state.items }),
+    migrate: (persistedState, fromVersion) => {
+        console.warn(
+          `Cart storage is version ${fromVersion}, current is 1. Resetting to empty cart.`
+        );
+        // Discard the old state and start fresh
+        return { items: [] };
+      },
+  merge: (persisted, current) => {
+    const p = persisted as { items?: unknown } | undefined;
+    return {
+      ...current,
+      items: Array.isArray(p?.items) ? (p.items as CartItem[]) : current.items,
+    };
+  },
+}
   )
 );
 

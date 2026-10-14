@@ -4,11 +4,31 @@ import Link from 'next/link';
 import { Product } from '@/types/domain/product';
 import StarRating from '../reviews/StarRating';
 import WishlistButton from '../wishlist/WishListButton';
+import { useCartStore } from '@/store/cartStore';
 
 function ProductCard({ product }: { product: Product }) {
+  const addItem = useCartStore((s) => s.addItem);
+
+  const handleAddToCart = () => {
+    addItem({
+      id: product.id,
+      name: product.name,
+      description: product.description,
+      color: "Default",
+      price: product.price,
+      originalPrice: product.originalPrice,
+      stock:
+        product.countInStock === 0
+          ? "Out of Stock"
+          : product.countInStock <= 5
+          ? "Low Stock"
+          : "In Stock",
+      image: product.image,
+    });
+  };
+
   return (
     <article className="bg-surface-primary rounded-2xl overflow-hidden shadow-soft border border-border-subtle">
-      {/* Image Area — Link only */}
       <Link href={`/products/${product.id}`} className="group/image block relative w-full aspect-4/3 bg-surface-secondary">
         <Image
           src={product.image}
@@ -16,17 +36,12 @@ function ProductCard({ product }: { product: Product }) {
           fill
           className="object-cover transition-transform duration-500 group-hover/image:scale-105"
         />
-
-        {/* Overlay */}
         <div className="absolute inset-0 bg-black/0 group-hover/image:bg-black/10 transition-all duration-300" />
-
         {product.badge && (
           <span className="absolute top-3 left-3 bg-secondary text-surface-primary text-xs font-semibold px-2.5 py-1 rounded-md">
             {product.badge}
           </span>
         )}
-
-        {/* Quick View */}
         <div className="absolute bottom-3 left-1/2 -translate-x-1/2 opacity-0 translate-y-2 group-hover/image:opacity-100 group-hover/image:translate-y-0 transition-all duration-300">
           <button
             onClick={(e) => e.preventDefault()}
@@ -37,9 +52,7 @@ function ProductCard({ product }: { product: Product }) {
         </div>
       </Link>
 
-      {/* Info Area */}
       <div className="p-4">
-        {/* Name + Wishlist on the same row */}
         <div className="flex items-start justify-between gap-2">
           <h3 className="text-sm font-semibold text-text-primary leading-snug">
             {product.name}
@@ -48,24 +61,24 @@ function ProductCard({ product }: { product: Product }) {
         </div>
 
         <StarRating rating={product.rating} reviewCount={product.reviewCount} />
-{product.originalPrice && product.originalPrice > product.price ? (
-        <div className="flex items-center gap-2 mt-2">
-          <span className="text-base font-bold text-secondary">
-            ${product.price}.00
-          </span>
-          <span className="text-sm text-text-secondary line-through">
-            ${product.originalPrice}.00
-          </span>
-        </div>
-) : (
+
+        {product.originalPrice && product.originalPrice > product.price ? (
           <div className="flex items-center gap-2 mt-2">
-          <span className="text-base font-bold text-secondary">
-            ${product.price}.00
-          </span>
+            <span className="text-base font-bold text-secondary">${product.price}.00</span>
+            <span className="text-sm text-text-secondary line-through">${product.originalPrice}.00</span>
           </div>
-)}
-        <button className="mt-3 w-full bg-secondary hover:bg-secondary-dark active:scale-95 text-surface-primary text-sm font-semibold py-2.5 rounded-xl cursor-pointer transition-all duration-200">
-          Add to Cart
+        ) : (
+          <div className="flex items-center gap-2 mt-2">
+            <span className="text-base font-bold text-secondary">${product.price}.00</span>
+          </div>
+        )}
+
+        <button
+          onClick={handleAddToCart}
+          disabled={product.countInStock === 0}
+          className="mt-3 w-full bg-secondary hover:bg-secondary-dark active:scale-95 text-surface-primary text-sm font-semibold py-2.5 rounded-xl cursor-pointer transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {product.countInStock === 0 ? "Out of Stock" : "Add to Cart"}
         </button>
       </div>
     </article>
