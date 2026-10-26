@@ -2,6 +2,7 @@
 import { ObjectId, Filter, Document } from "mongodb";
 import { connectDB } from "@/lib/db";
 import { Product } from "@/types/domain/product";
+import { cacheLife, cacheTag } from 'next/cache';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const COLLECTION = "products";
@@ -59,28 +60,34 @@ function buildFilterQuery(filters: ProductFilters): Filter<Document> {
  * Fetches all products from the database
  */
 export async function getAllProducts(): Promise<Product[]> {
-    const db = await connectDB();
-    const docs = await db.collection(COLLECTION).find().toArray();
-    return docs.map(mapProduct);
+  'use cache';
+  cacheLife('hours');  // uses your custom profile
+  cacheTag('products');    // tag for on-demand invalidation
+
+  const db = await connectDB();
+  const docs = await db.collection(COLLECTION).find().toArray();
+  return docs.map(mapProduct);
 }
 
-/**
- * Fetches only products where isOnSale is true
- */
 export async function getOnSaleProducts(): Promise<Product[]> {
-    const db = await connectDB();
-    const docs = await db
-        .collection(COLLECTION)
-        .find({ isOnSale: true })
-        .toArray();
-    return docs.map(mapProduct);
-}
+  'use cache';
+  cacheLife('hours');
+  cacheTag('products', 'sale-products'); // multiple tags
 
+  const db = await connectDB();
+  const docs = await db.collection(COLLECTION)
+    .find({ isOnSale: true })
+    .toArray();
+  return docs.map(mapProduct);
+}
 /**
  * Fetches a single product by its MongoDB _id string
  * Returns null if the id is invalid or product not found
  */
 export async function getProductById(id: string): Promise<Product | null> {
+      'use cache';
+  cacheLife('hours');
+  cacheTag('products', 'single-product');
     if (!ObjectId.isValid(id)) return null;
 
     const db = await connectDB();
@@ -98,6 +105,9 @@ export async function getProductById(id: string): Promise<Product | null> {
  * Used for server-side cart price validation at checkout
  */
 export async function getProductsByIds(ids: string[]): Promise<Product[]> {
+      'use cache';
+  cacheLife('hours');
+  cacheTag('products', 'multiple-products'); // multiple tags
     const validObjectIds = ids
         .filter((id) => ObjectId.isValid(id))
         .map((id) => new ObjectId(id));
@@ -119,6 +129,9 @@ export async function getProductsByIds(ids: string[]): Promise<Product[]> {
 export async function getProductsByCategory(
     category: string
 ): Promise<Product[]> {
+      'use cache';
+  cacheLife('hours');
+  cacheTag('products', 'category-products'); // multiple tags
     const db = await connectDB();
     const docs = await db
         .collection(COLLECTION)
@@ -133,6 +146,9 @@ export async function getProductsByCategory(
  * Falls back to getAllProducts if query is empty
  */
 export async function getFilteredProducts(query: string): Promise<Product[]> {
+      'use cache';
+  cacheLife('hours');
+  cacheTag('products', 'filtered-products'); // multiple tags
     if (!query.trim()) return getAllProducts();
 
     const db = await connectDB();
@@ -157,6 +173,9 @@ export async function getPaginatedProducts(
     limit = 12,
     filters: ProductFilters = {}
 ): Promise<PaginatedResult<Product>> {
+      'use cache';
+  cacheLife('hours');
+  cacheTag('products', 'paginated-products'); // multiple tags
     const safePage = Math.max(1, page);
     const safeLimit = Math.min(Math.max(1, limit), 100); // cap at 100
     const skip = (safePage - 1) * safeLimit;
@@ -189,6 +208,9 @@ export async function getPaginatedProducts(
 export async function getProductCount(
     filters: ProductFilters = {}
 ): Promise<number> {
+      'use cache';
+  cacheLife('hours');
+  cacheTag('products', 'product-count'); // multiple tags
     const db = await connectDB();
     return db
         .collection(COLLECTION)
@@ -219,4 +241,19 @@ export async function updateProductStock(
     );
 
     return result.modifiedCount === 1;
+}
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const product = await getProductById(id);
+
+  if (!product) return { title: "Product Not Found" };
+
+  return {
+    title: `${product.name} | LUMINA`,
+    description: product.description,
+  };
 }

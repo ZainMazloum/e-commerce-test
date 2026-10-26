@@ -7,20 +7,26 @@ const footerLinks = [
   { label: "Contact Us", href: "#" },
 ];
 
-export default function Footer() {
+async function getCurrentYear() {
+  "use cache";
+
+  return new Date().getFullYear();
+}
+
+export default async function Footer() {
+  const CURRENT_YEAR = await getCurrentYear();
+
   return (
     <footer className="border-t border-border bg-background">
       <div className="max-w-7xl mx-auto px-5 py-10">
         <div className="flex flex-col items-center gap-6 lg:flex-row lg:justify-between lg:gap-0">
-
           <Link
-            href="#"
+            href="/"
             className="font-bold text-2xl tracking-tight text-primary select-none shrink-0"
           >
             LUMINA
           </Link>
 
-          {/* Nav Links */}
           <nav className="grid grid-cols-2 justify-items-center gap-x-6 gap-y-3 lg:flex lg:flex-nowrap lg:justify-start lg:gap-x-8 lg:gap-y-0">
             {footerLinks.map((link) => (
               <Link
@@ -33,11 +39,9 @@ export default function Footer() {
             ))}
           </nav>
 
-          {/* Copyright */}
           <p className="text-sm text-text-secondary text-center shrink-0 lg:text-right">
-            © {new Date().getFullYear()} LUMINA Editorial Boutique. All rights reserved.
+            © {CURRENT_YEAR} LUMINA Editorial Boutique. All rights reserved.
           </p>
-
         </div>
       </div>
     </footer>

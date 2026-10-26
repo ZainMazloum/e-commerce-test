@@ -1,8 +1,23 @@
+
+import { notFound } from "next/navigation";
+import { PRODUCTS } from "@/lib/data/products";
+import ProductDetailView from "@/components/product/ProductDetailView";
+interface ProductPageProps {
+  params: Promise<{ id: string }>;
+}
+
 export default async function ProductPage({
   params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+}: ProductPageProps) {
   const { id } = await params;
-  return <main className="min-h-screen bg-background">Product {id}</main>;
+
+  const product = PRODUCTS.find(
+    (p) => String(p.id) === id
+  );
+
+  if (!product) {
+    notFound();
+  }
+
+  return <ProductDetailView product={product} />;
 }

@@ -1,65 +1,125 @@
-"use server"; // Executed strictly on the server [19]
-import type {ActionResult} from "@/types/domain/order"
+"use server";
+
 import { getServerSession } from "next-auth";
 import { connectDB } from "@/lib/db";
-import { z } from "zod";
-import {IOrder} from "@/types/domain/order";
+import { getProductsByIds } from "@/lib/products";
+import {
+  CreateOrderSchema,
+  type IOrder,
+  type ActionResult,
+} from "@/types/domain/order";
 
-const OrderItemSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  description: z.string(),
-  image: z.string(),
-  price: z.number().positive(),
-  quantity: z.number().int().positive(),
-});
-
-const CreateOrderSchema = z.object({
-  items: z.array(OrderItemSchema).min(1),
-  totalAmount: z.number().positive(),
-});
-
-export async function createOrderAction(rawInput: z.infer<typeof  CreateOrderSchema>): Promise<ActionResult> {
+export async function createOrderAction(
+  rawInput: unknown
+): Promise<ActionResult> {
   try {
+    // 1. Authenticate the customer.
     const session = await getServerSession();
-    if (!session || !session.user?.email) {
-      return { success: false, error: "Unauthorized" };
+
+    if (!session?.user?.email) {
+      return {
+        success: false,
+        error: "Unauthorized",
+      };
     }
 
+    // 2. Validate untrusted client input.
     const validation = CreateOrderSchema.safeParse(rawInput);
+
     if (!validation.success) {
-      return { success: false, error: "Invalid data format" };
+      return {
+        success: false,
+        error: "Invalid order data",
+      };
     }
 
-    const { items, totalAmount } = validation.data;
-    const db = await connectDB();
+    const { items } = validation.data;
 
-    // Verify total on the server
+    // 3. Fetch authoritative product data from MongoDB.
+    const ids = [...new Set(items.map((item) => item.id))];
+    const products = await getProductsByIds(ids);
+
+    // 4. Index products for efficient lookup.
+    const productsById = new Map(
+      products.map((product) => [product.id, product])
+    );
+
+    // 5. Build order items and calculate the total on the server.
     let verifiedTotal = 0;
+
+    const verifiedItems: IOrder["items"] = [];
+
     for (const item of items) {
-      verifiedTotal += item.price * item.quantity;
+      const product = productsById.get(item.id);
+
+      if (!product) {
+        return {
+          success: false,
+          error: "One or more products are unavailable",
+        };
+      }
+
+      // Add product availability and stock checks here.
+      if (
+        !Number.isFinite(product.price) ||
+        product.price < 0
+      ) {
+        console.error("Invalid product price:", product.id);
+
+        return {
+          success: false,
+          error: "Unable to calculate order total",
+        };
+      }
+
+      const subtotal = product.price * item.quantity;
+      verifiedTotal += subtotal;
+
+      // Never copy the client's name or price into the order.
+      verifiedItems.push({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        quantity: item.quantity,
+        description: product.description,
+        image: product.image,
+      });
     }
 
-    if (Math.abs(verifiedTotal - totalAmount) > 0.01) {
-      return { success: false, error: "Order calculation mismatch" };
+    if (!Number.isFinite(verifiedTotal)) {
+      return {
+        success: false,
+        error: "Invalid order total",
+      };
     }
 
+    // 6. Build the order exclusively from verified data.
     const newOrder: Omit<IOrder, "_id"> = {
       userEmail: session.user.email,
-      items,
+      items: verifiedItems,
       total: verifiedTotal,
       status: "Processing",
       createdAt: new Date().toISOString(),
     };
 
-    const result = await db.collection("orders").insertOne(newOrder);
+    // 7. Save the order.
+    const db = await connectDB();
 
-    return { 
-      success: true, 
-      orderId: result.insertedId.toString() 
+    const result = await db
+      .collection("orders")
+      .insertOne(newOrder);
+
+    // 8. Return the created order's ID.
+    return {
+      success: true,
+      orderId: result.insertedId.toString(),
     };
   } catch (error) {
     console.error("Server Action Failed:", error);
-    return { success: false, error: "An unexpected error occurred" };
+
+    return {
+      success: false,
+      error: "An unexpected error occurred",
+    };
   }
 }
