@@ -5,14 +5,19 @@ import { useState } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Product } from "@/types/domain/product";
-
+import { StaticImageData } from "next/image";
 interface ProductGalleryProps {
   product: Product;
 }
 
 export default function ProductGallery({ product }: ProductGalleryProps) {
   // In production product.images[] replaces this stub
-  const images = [product.image, product.image, product.image, product.image] as string[];
+const images: (string | StaticImageData)[] = [
+  product.image,
+  product.image,
+  product.image,
+  product.image,
+];
   const [activeImage, setActiveImage] = useState(0);
 
   return (

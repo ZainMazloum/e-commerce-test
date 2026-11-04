@@ -24,10 +24,9 @@ export default function ProductFeatureSection({ product }: ProductFeatureSection
           <h2 className="font-display text-3xl lg:text-4xl font-bold text-text-primary leading-snug mb-5">
             Designed for the Modern Aesthetic
           </h2>
-          <p className="text-sm text-text-secondary leading-relaxed mb-4">
-            Each piece in our Vault collection is produced in limited runs, ensuring quality and
-            exclusivity. The carefully selected materials develop character over time.
-          </p>
+<p className="text-sm text-text-secondary leading-relaxed mb-4">
+  {product.description}
+</p>
           <p className="text-sm text-text-secondary leading-relaxed mb-6">
             Our commitment to sustainability means every element is responsibly sourced — beautiful
             inside and out.

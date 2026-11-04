@@ -1,11 +1,10 @@
-import { StaticImageData } from "next/image";
 export interface Product {
-    id: string;          // _id converted to string
+  id: string;
   name: string;
   description: string;
-  image: string | StaticImageData;
+  image: string;        // string only, no StaticImageData
   price: number;
-  originalPrice?: number;   // optional because not all products may have it
+  originalPrice?: number;
   isOnSale: boolean;
   badge: string | null;
   rating: number;

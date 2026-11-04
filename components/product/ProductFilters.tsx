@@ -2,13 +2,7 @@
 
 import { useState } from "react";
 import FilterDropdown from "../ui/FilterDropdown";
-import {
-  CATEGORY_OPTIONS,
-  PRICE_OPTIONS,
-  MATERIAL_OPTIONS,
-  SORT_OPTIONS,
-} from "../../lib/data/products";
-
+import { CATEGORY_OPTIONS, MATERIAL_OPTIONS, PRICE_OPTIONS, SORT_OPTIONS } from "@/lib/constrants/filters"
 export default function ProductsFilterBar() {
   const [category,   setCategory]   = useState("all");
   const [priceRange, setPriceRange] = useState("any");

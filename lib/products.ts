@@ -25,11 +25,19 @@ export interface PaginatedResult<T> {
 }
 
 // ─── Shared Helper ────────────────────────────────────────────────────────────
+// This is the correct approach — fix it HERE, not in the type
 function mapProduct(p: Document): Product {
-    const { _id, ...rest } = p;
-    return { id: (_id as ObjectId).toString(), ...rest } as Product;
-}
+  const { _id, numReviews, originalPrice, image, ...rest } = p;
 
+  return {
+    ...rest,
+    id: (_id as ObjectId).toString(),
+    reviewCount: (numReviews as number) ?? 0,
+    badge: (rest.badge as string) ?? null,
+    originalPrice: (originalPrice as number) ?? undefined,
+    image: (image as string) || "/images/placeholder.png",
+  } as Product;
+}
 function buildFilterQuery(filters: ProductFilters): Filter<Document> {
     const query: Filter<Document> = {};
 
@@ -216,7 +224,26 @@ export async function getProductCount(
         .collection(COLLECTION)
         .countDocuments(buildFilterQuery(filters));
 }
+export async function getRelatedProducts(
+  category: string,
+  excludeId: string
+): Promise<Product[]> {
+  try {
+    const db = await connectDB();
+    const products = await db
+      .collection("products")
+      .find({
+        category,
+        _id: { $ne: new ObjectId(excludeId) },
+      })
+      .limit(4)
+      .toArray();
 
+    return products.map(mapProduct);
+  } catch {
+    return [];
+  }
+}
 // ─── Write Functions ──────────────────────────────────────────────────────────
 
 /**

@@ -6,7 +6,7 @@ import { Heart, Share2 } from "lucide-react";
 import { Product } from "@/types/domain/product";
 import StarRating from "@/components/reviews/StarRating";
 import ProductAccordion from "./ProductAccordion";
-
+import { useCartStore } from "@/store/cartStore";
 const COLORS = [
   { name: "Emerald", hex: "#2D6A4F" },
   { name: "Stone",   hex: "#C2A87C" },
@@ -25,7 +25,7 @@ export default function ProductInfo({ product }: ProductInfoProps) {
   const [activeSize,  setActiveSize]  = useState(SIZES[2]);
   const [quantity,    setQuantity]    = useState(1);
   const [wished,      setWished]      = useState(false);
-
+const addItem = useCartStore((s) => s.addItem);
   return (
     <div className="flex flex-col gap-5">
       {/* Name + rating */}
@@ -133,9 +133,30 @@ export default function ProductInfo({ product }: ProductInfoProps) {
             +
           </button>
         </div>
-        <button className="flex-1 h-12 rounded-xl bg-secondary hover:bg-secondary-dark active:scale-[0.98] text-white font-semibold text-sm transition-all duration-200 cursor-pointer">
-          Add to Cart — ${(product.price * quantity).toFixed(2)}
-        </button>
+<button
+  onClick={() =>
+    addItem(
+      {
+        id:            product.id,
+        name:          product.name,
+        color:         activeColor,   // ← the selected color
+        price:         product.price,
+        description:   product.description,
+        originalPrice: product.originalPrice,
+        stock:         product.countInStock > 5
+                         ? "In Stock"
+                         : product.countInStock > 0
+                         ? "Low Stock"
+                         : "Out of Stock",
+        image:         product.image,
+      },
+      quantity   // ← the selected quantity
+    )
+  }
+  className="flex-1 h-12 rounded-xl bg-secondary hover:bg-secondary-dark active:scale-[0.98] text-white font-semibold text-sm transition-all duration-200 cursor-pointer"
+>
+  Add to Cart — ${(product.price * quantity).toFixed(2)}
+</button>
       </div>
 
       {/* Wishlist + Share */}

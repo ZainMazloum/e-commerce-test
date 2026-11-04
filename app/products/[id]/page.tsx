@@ -1,23 +1,18 @@
-
 import { notFound } from "next/navigation";
-import { PRODUCTS } from "@/lib/data/products";
+import { getProductById, getRelatedProducts } from "@/lib/products";
 import ProductDetailView from "@/components/product/ProductDetailView";
+
 interface ProductPageProps {
   params: Promise<{ id: string }>;
 }
 
-export default async function ProductPage({
-  params,
-}: ProductPageProps) {
+export default async function ProductPage({ params }: ProductPageProps) {
   const { id } = await params;
+  const product = await getProductById(id);
 
-  const product = PRODUCTS.find(
-    (p) => String(p.id) === id
-  );
+  if (!product) notFound();
 
-  if (!product) {
-    notFound();
-  }
+  const relatedProducts = await getRelatedProducts(product.category, id);
 
-  return <ProductDetailView product={product} />;
+  return <ProductDetailView product={product} relatedProducts={relatedProducts} />;
 }
